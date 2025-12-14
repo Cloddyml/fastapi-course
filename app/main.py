@@ -52,39 +52,33 @@ def create_hotels(
 @app.put("/hotels/{hotel_id}")
 def update_hotels(
     hotel_id: int,
-    title: str = Body(embed=True),
-    name: str = Body(embed=True),
+    title: str = Body(),
+    name: str = Body(),
 ):
     global hotels
     
-    for hotel in hotels:
-        if hotel["id"] != hotel_id:
-            continue
-        else:
-            hotel["title"] = title
-            hotel["name"] = name
-            
-            return {"status": "OK"}
-    return {"status": "NOT OK"}
+    hotel = [hotel for hotel in hotel if hotel["id"] == hotel_id][0]
+    hotel["title"] = title
+    hotel["name"] = name
+    return {"status": "OK"}
 
-@app.patch("/hotels/{hotel_id}")
+@app.patch(
+        path="/hotels/{hotel_id}",
+        summary="Частичное обновление данных об отеле",
+        description="<h1>Тут частично обновляются данные об отеле: можно отправить name, а можно title</h1>"
+)
 def edit_hotels(
     hotel_id: int,
-    title: None | str = Body(default=None, embed=True),
-    name: None | str = Body(default=None, embed=True),
+    title: None | str = Body(default=None),
+    name: None | str = Body(default=None),
 ):
     global hotels
 
-    if name == None and title == None:
-        return {"status": "NOT OK"}
-    else:
-        if name != None and title == None:
-            hotels[hotel_id - 1]["name"] = name
-        elif title != None and name == None:
-            hotels[hotel_id - 1]["title"] = title
-        else:
-            return {"status": "NOT OK"}
-
+    hotel = [hotel for hotel in hotel if hotel["id"] == hotel_id][0]
+    if title:
+        hotel["title"] = title
+    if name:
+        hotel["name"] = name
     return {"status": "OK"}
 
 def main():

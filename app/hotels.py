@@ -1,5 +1,6 @@
-from fastapi import Query, Body, APIRouter
+from fastapi import Query, APIRouter
 
+from schemas.hotels import Hotel, HotelPatch
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -10,10 +11,10 @@ hotels = [
 
 @router.get("")
 def get_hotels(
-    id: int | None = Query(default=None, description="Айдишник"),
+    id: int | None = Query(default=None, de1scription="Айдишник"),
     title: str | None = Query(default=None, description="Название отеля"),
     name: str | None = Query(default=None, description="Имя отеля"),
-):
+) -> list[Hotel]:
     hotels_ = []
     for hotel in hotels:
         if id and hotel["id"] != id:
@@ -35,30 +36,24 @@ def delete_hotels(
     return {"status": "OK"}
 
 @router.post("")
-def create_hotels(
-    title: str = Body(embed=True),
-    name: str = Body(embed=True),
-):
+def create_hotels(hotel_data: Hotel):
     global hotels
     hotels.append({
         "id": hotels[-1]["id"] + 1,
-        "title": title,
-        "name": name
+        "title": hotel_data.title,
+        "name": hotel_data.name,
     })
     
     return {"status": "OK"}
 
 @router.put("/{hotel_id}")
-def update_hotels(
-    hotel_id: int,
-    title: str = Body(),
-    name: str = Body(),
-):
+def update_hotels(hotel_id: int, hotel_data: Hotel,):
+
     global hotels
     
-    hotel = [hotel for hotel in hotel if hotel["id"] == hotel_id][0]
-    hotel["title"] = title
-    hotel["name"] = name
+    hotel = [hotel for hotel in hotels if hotel["id"] == hotel_id][0]
+    hotel["title"] = hotel_data.title
+    hotel["name"] = hotel_data.name
     return {"status": "OK"}
 
 @router.patch(
@@ -66,16 +61,12 @@ def update_hotels(
         summary="Частичное обновление данных об отеле",
         description="<h1>Тут частично обновляются данные об отеле: можно отправить name, а можно title</h1>"
 )
-def edit_hotels(
-    hotel_id: int,
-    title: None | str = Body(default=None),
-    name: None | str = Body(default=None),
-):
+def edit_hotels(hotel_id: int, hotel_data: HotelPatch,):
     global hotels
 
-    hotel = [hotel for hotel in hotel if hotel["id"] == hotel_id][0]
-    if title:
-        hotel["title"] = title
-    if name:
-        hotel["name"] = name
+    hotel = [hotel for hotel in hotels if hotel["id"] == hotel_id][0]
+    if hotel_data.title:
+        hotel["title"] = hotel_data.title
+    if hotel_data.name:
+        hotel["name"] = hotel_data.name
     return {"status": "OK"}

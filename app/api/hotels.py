@@ -1,5 +1,5 @@
 from fastapi import Body, Query, APIRouter
-from sqlalchemy import insert, select
+from sqlalchemy import insert, select, func
 
 from app.api.dependencies import PaginationDep
 from app.schemas.hotels import Hotel, HotelPatch
@@ -11,18 +11,17 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 @router.get("")
 async def get_hotels(
     pagination: PaginationDep,
-    id: int | None = Query(default=None, de1scription="Айдишник"),
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Город отеля"),
-    ):# -> list[Hotel]:
+    ):
 
     per_page = pagination.per_page or 5
     async with async_session_maker() as session:
         query = select(HotelsOrm)
-        if id:
-            query = query.filter_by(id=id)
         if title:
-            query = query.filter_by(title=title)
+            query = query.filter(func.lower(HotelsOrm.title).like(f"%{title.strip().lower()}%"))
+        if location:
+            query = query.filter(func.lower(HotelsOrm.location).like(f"%{location.strip().lower()}%"))
         
         query = (
             query

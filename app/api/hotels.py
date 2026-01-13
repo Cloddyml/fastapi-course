@@ -1,5 +1,5 @@
 from fastapi import Body, Query, APIRouter
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 
 from app.api.dependencies import PaginationDep
 from app.schemas.hotels import Hotel, HotelPatch
@@ -8,42 +8,30 @@ from app.models.hotels import HotelsOrm
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
-hotels = [
-    {"id": 1, "title": "Сочи", "name": "sochi"},
-    {"id": 2, "title": "Дубай", "name": "dubai"},
-    {"id": 3, "title": "Мальдивы", "name": "maldivi"},
-    {"id": 4, "title": "Геленджик", "name": "gelendzhik"},
-    {"id": 5, "title": "Москва", "name": "moscow"},
-    {"id": 6, "title": "Казань", "name": "kazan"},
-    {"id": 7, "title": "Санкт-Петербург", "name": "spb"},
-]
-
 @router.get("")
-def get_hotels(
+async def get_hotels(
     pagination: PaginationDep,
     id: int | None = Query(default=None, de1scription="Айдишник"),
     title: str | None = Query(default=None, description="Название отеля"),
     name: str | None = Query(default=None, description="Имя отеля"),
-) -> list[Hotel]:
-    hotels_ = []
-    for hotel in hotels:
-        if id and hotel["id"] != id:
-            continue
-        if title and hotel["title"] != title:
-            continue
-        if name and hotel["name"] != name:
-            continue
+    ) -> list[Hotel]:
 
-        hotels_.append(hotel)
+    async with async_session_maker() as session:
+        query = select(HotelsOrm)
+        result = await session.execute(query)
 
-    if pagination.page and pagination.per_page:
-        return hotels_[pagination.per_page * (pagination.page - 1):][:pagination.per_page]
-    return hotels_
+        # print(type(result), result)
+        hotels = result.scalars().all()
+        # print(type(hotels), hotels)
+        return hotels
+    
+    # if pagination.page and pagination.per_page:
+    #     return hotels_[pagination.per_page * (pagination.page - 1):][:pagination.per_page]
 
 @router.delete("/{hotel_id}")
 def delete_hotels(
         hotel_id: int,
-):
+    ):
     global hotels
     hotels = [hotel for hotel in hotels if hotel["id"] != hotel_id]
     return {"status": "OK"}

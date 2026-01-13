@@ -3,7 +3,7 @@ from sqlalchemy import insert
 
 from app.api.dependencies import PaginationDep
 from app.schemas.hotels import Hotel, HotelPatch
-from app.database import async_session_maker
+from app.database import async_session_maker, engine
 from app.models.hotels import HotelsOrm
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
@@ -58,9 +58,10 @@ async def create_hotels(hotel_data: Hotel = Body(openapi_examples={
         "title": "Отель У фонтана",
         "location": "Дубай"
     }},
-})):
+    })):
     async with async_session_maker() as session:
         add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
+        # print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True})) # Для дебага и получения сырого SQL запроса
         await session.execute(add_hotel_stmt)
         await session.commit()
 

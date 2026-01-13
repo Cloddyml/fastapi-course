@@ -29,6 +29,7 @@ async def get_hotels(
             .offset(per_page * (pagination.page - 1))
         )
 
+        # print(query.compile(engine, compile_kwargs={"literal_binds": True}))
         result = await session.execute(query)
 
         # print(type(result), result)

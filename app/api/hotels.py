@@ -1,9 +1,7 @@
 from fastapi import APIRouter, Body, Query
-from sqlalchemy import insert
 
 from app.api.dependencies import PaginationDep
 from app.database import async_session_maker
-from app.models.hotels import HotelsOrm
 from app.repositories.hotels import HotelsRepository
 from app.schemas.hotels import Hotel, HotelPatch
 
@@ -51,12 +49,10 @@ async def create_hotels(
     ),
 ):
     async with async_session_maker() as session:
-        add_hotel_stmt = insert(HotelsOrm).values(**hotel_data.model_dump())
-        # print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True})) # Для дебага и получения сырого SQL запроса
-        await session.execute(add_hotel_stmt)
+        hotel = await HotelsRepository(session).add(hotel_data)
         await session.commit()
 
-    return {"status": "OK"}
+    return {"status": "OK", "data": hotel}
 
 
 @router.put("/{hotel_id}")

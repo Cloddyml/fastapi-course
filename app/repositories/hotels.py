@@ -22,7 +22,6 @@ class HotelsRepository(BaseRepository):
 
         # print(query.compile(engine, compile_kwargs={"literal_binds": True}))
         result = await self.session.execute(query)
-
         return result.scalars().all()
 
         # print(type(result), result)

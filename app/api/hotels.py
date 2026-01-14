@@ -5,6 +5,7 @@ from app.api.dependencies import PaginationDep
 from app.schemas.hotels import Hotel, HotelPatch
 from app.database import async_session_maker, engine
 from app.models.hotels import HotelsOrm
+from app.repositories.hotels import HotelsRepository
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -15,27 +16,30 @@ async def get_hotels(
     location: str | None = Query(default=None, description="Город отеля"),
     ):
 
-    per_page = pagination.per_page or 5
     async with async_session_maker() as session:
-        query = select(HotelsOrm)
-        if title:
-            query = query.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
-        if location:
-            query = query.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
+        return await HotelsRepository(session).get_all()
+
+    # per_page = pagination.per_page or 5
+    # async with async_session_maker() as session:
+    #     query = select(HotelsOrm)
+    #     if title:
+    #         query = query.filter(func.lower(HotelsOrm.title).contains(title.strip().lower()))
+    #     if location:
+    #         query = query.filter(func.lower(HotelsOrm.location).contains(location.strip().lower()))
         
-        query = (
-            query
-            .limit(per_page)
-            .offset(per_page * (pagination.page - 1))
-        )
+    #     query = (
+    #         query
+    #         .limit(per_page)
+    #         .offset(per_page * (pagination.page - 1))
+    #     )
 
-        print(query.compile(engine, compile_kwargs={"literal_binds": True}))
-        result = await session.execute(query)
+    #     # print(query.compile(engine, compile_kwargs={"literal_binds": True}))
+    #     result = await session.execute(query)
 
-        # print(type(result), result)
-        hotels = result.scalars().all()
-        # print(type(hotels), hotels)
-        return hotels
+    #     # print(type(result), result)
+    #     hotels = result.scalars().all()
+    #     # print(type(hotels), hotels)
+    #     return hotels
     
     # if pagination.page and pagination.per_page:
     #     return hotels_[pagination.per_page * (pagination.page - 1):][:pagination.per_page]

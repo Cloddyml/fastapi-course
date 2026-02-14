@@ -24,6 +24,10 @@ async def get_hotels(
         )
 
 
+@router.get("/{hotel_id}")
+async def get_hotel(hotel_id: int): ...
+
+
 @router.delete("/{hotel_id}")
 async def delete_hotels(
     hotel_id: int,
@@ -76,11 +80,9 @@ async def edit_hotels(
     hotel_id: int,
     hotel_data: HotelPatch,
 ):
-    global hotels
-
-    hotel = [hotel for hotel in hotels if hotel["id"] == hotel_id][0]
-    if hotel_data.title:
-        hotel["title"] = hotel_data.title
-    if hotel_data.name:
-        hotel["name"] = hotel_data.name
+    async with async_session_maker() as session:
+        await HotelsRepository(session).edit(
+            hotel_data, id=hotel_id, exclude_unset=True
+        )
+        await session.commit()
     return {"status": "OK"}

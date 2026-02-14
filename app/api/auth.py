@@ -56,4 +56,4 @@ async def logout(
     response: Response,
 ):
     response.delete_cookie(key="access_token")
-    return {"status": "Ok"}
+    return {"status": "OK"}

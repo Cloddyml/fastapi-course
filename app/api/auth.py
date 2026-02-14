@@ -49,3 +49,11 @@ async def get_me(
     async with async_session_maker() as session:
         user = await UsersRepository(session).get_one_or_none(id=user_id)
         return user
+
+
+@router.post("/logout")
+async def logout(
+    response: Response,
+):
+    response.delete_cookie(key="access_token")
+    return {"status": "Ok"}

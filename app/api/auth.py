@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException, Request, Response
+from fastapi import APIRouter, HTTPException, Response
 
+from app.api.dependencies import UserIdDep
 from app.database import async_session_maker
 from app.repositories.users import UsersRepository
 from app.schemas.users import UserAdd, UserRequestAdd
@@ -32,22 +33,19 @@ async def login_user(
         )
         if not user:
             raise HTTPException(
-                status_code=401, detail="Пользователь с таким email не зарегистрирован."
+                status_code=401, detail="Пользователь с таким email не зарегистрирован"
             )
         if not AuthService().verify_password(data.password, user.hashed_password):
-            raise HTTPException(status_code=401, detail="Пароль неверный.")
+            raise HTTPException(status_code=401, detail="Пароль неверный")
         access_token = AuthService().create_access_token({"user_id": user.id})
         response.set_cookie("access_token", access_token)
         return {"access_token": access_token}
 
 
-@router.get("/only_auth")
-async def only_auth(
-    request: Request,
+@router.get("/me")
+async def get_me(
+    user_id: UserIdDep,
 ):
-    access_token = request.cookies.get("access_token", None)
-    data = AuthService().decode_token(access_token)
-    user_id = data["user_id"]
     async with async_session_maker() as session:
         user = await UsersRepository(session).get_one_or_none(id=user_id)
         return user

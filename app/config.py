@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,5 +22,6 @@ class Settings(BaseSettings):
         env_file=BASE_DIR / ".env"
         # extra="ignore # extra позволяет игнорировать переменные окружения, которые есть в .env файле, но отсутсвуют в config.py
     )
+
 
 settings = Settings()

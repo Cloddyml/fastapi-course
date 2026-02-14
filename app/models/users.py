@@ -9,4 +9,4 @@ class UsersOrm(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     email: Mapped[str] = mapped_column(String(length=200))
-    hashed_assword: Mapped[str] = mapped_column(String(length=200))
+    hashed_password: Mapped[str] = mapped_column(String(length=200))

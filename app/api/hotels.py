@@ -1,8 +1,6 @@
 from fastapi import APIRouter, Body, Query
 
-from app.api.dependencies import PaginationDep
-from app.database import async_session_maker
-from app.repositories.hotels import HotelsRepository
+from app.api.dependencies import DBDep, PaginationDep
 from app.schemas.hotels import HotelAdd, HotelPatch
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
@@ -26,26 +24,27 @@ async def get_hotels(
 
 @router.get("/{hotel_id}")
 async def get_hotel(
+    db: DBDep,
     hotel_id: int,
 ):
-    async with async_session_maker() as session:
-        return await HotelsRepository(session).get_one_or_none(
-            id=hotel_id,
-        )
+    return await db.hotels.get_one_or_none(
+        id=hotel_id,
+    )
 
 
 @router.delete("/{hotel_id}")
 async def delete_hotels(
+    db: DBDep,
     hotel_id: int,
 ):
-    async with async_session_maker() as session:
-        await HotelsRepository(session).delete(id=hotel_id)
-        await session.commit()
+    await db.hotels.delete(id=hotel_id)
+    await db.commit()
     return {"status": "OK"}
 
 
 @router.post("")
 async def create_hotels(
+    db: DBDep,
     hotel_data: HotelAdd = Body(
         openapi_examples={
             "1": {
@@ -59,21 +58,20 @@ async def create_hotels(
         }
     ),
 ):
-    async with async_session_maker() as session:
-        hotel = await HotelsRepository(session).add(hotel_data)
-        await session.commit()
+    hotel = await db.hotels.add(hotel_data)
+    await db.commit()
 
     return {"status": "OK", "data": hotel}
 
 
 @router.put("/{hotel_id}")
 async def update_hotels(
+    db: DBDep,
     hotel_id: int,
     hotel_data: HotelAdd,
 ):
-    async with async_session_maker() as session:
-        await HotelsRepository(session).edit(hotel_data, id=hotel_id)
-        await session.commit()
+    await db.hotels.edit(hotel_data, id=hotel_id)
+    await db.commit()
     return {"status": "OK"}
 
 
@@ -83,12 +81,10 @@ async def update_hotels(
     description="<h1>Тут частично обновляются данные об отеле: можно отправить name, а можно title</h1>",
 )
 async def edit_hotels(
+    db: DBDep,
     hotel_id: int,
     hotel_data: HotelPatch,
 ):
-    async with async_session_maker() as session:
-        await HotelsRepository(session).edit(
-            hotel_data, id=hotel_id, exclude_unset=True
-        )
-        await session.commit()
+    await db.hotels.edit(hotel_data, id=hotel_id, exclude_unset=True)
+    await db.commit()
     return {"status": "OK"}

@@ -79,7 +79,6 @@ async def create_rooms(
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     room = await db.rooms.add(_room_data)
 
-    room_data.facilities_ids
     rooms_facilities_data = [
         RoomFacilityAdd(room_id=room.id, facility_id=f_id)
         for f_id in room_data.facilities_ids
@@ -99,6 +98,9 @@ async def update_rooms(
 ):
     _room_data = RoomAdd(hotel_id=hotel_id, **room_data.model_dump())
     await db.rooms.edit(_room_data, id=room_id)
+    await db.rooms_facilities.set_room_facilities(
+        room_id=room_id, facilities_ids=room_data.facilities_ids
+    )
     await db.commit()
     return {"status": "OK"}
 
@@ -110,14 +112,17 @@ async def edit_rooms(
     room_id: int,
     room_data: RoomPatchRequest,
 ):
-    _room_data = RoomPatch(
-        hotel_id=hotel_id, **room_data.model_dump(exclude_unset=True)
-    )
+    _room_data_dict = room_data.model_dump(exclude_unset=True)
+    _room_data = RoomPatch(hotel_id=hotel_id, **_room_data_dict)
     await db.rooms.edit(
         _room_data,
         id=room_id,
         hotel_id=hotel_id,
         exclude_unset=True,
     )
+    if "facilities_ids" in _room_data_dict:
+        await db.rooms_facilities.set_room_facilities(
+            room_id=room_id, facilities_ids=_room_data_dict["facilities_ids"]
+        )
     await db.commit()
     return {"status": "OK"}

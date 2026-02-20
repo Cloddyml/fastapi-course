@@ -1,4 +1,4 @@
-import asyncio
+# import asyncio
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -8,7 +8,7 @@ from fastapi import FastAPI
 from fastapi_cache import FastAPICache
 from fastapi_cache.backends.redis import RedisBackend
 
-from app.api.dependencies import get_db
+# from app.api.dependencies import get_db
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -23,22 +23,22 @@ from app.api.rooms import router as router_rooms
 # print(f"{settings.DB_NAME=}")
 
 
-async def send_emails_bookings_today_checkin():
-    async for db in get_db():
-        bookings = await db.bookings.get_bookings_with_today_checkin()
-        print(f"{bookings=}")
+# async def send_emails_bookings_today_checkin():
+#     async for db in get_db():
+#         bookings = await db.bookings.get_bookings_with_today_checkin()
+#         print(f"{bookings=}")
 
 
-async def run_send_email_regularly():
-    while True:
-        await send_emails_bookings_today_checkin()
-        await asyncio.sleep(5)
+# async def run_send_email_regularly():
+#     while True:
+#         await send_emails_bookings_today_checkin()
+#         await asyncio.sleep(5)
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # При старте приложения
-    asyncio.create_task(run_send_email_regularly())
+    # asyncio.create_task(run_send_email_regularly())
     await redis_manager.connect()
     FastAPICache.init(RedisBackend(redis_manager.redis), prefix="fastapi-cache")
     yield

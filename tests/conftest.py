@@ -25,6 +25,19 @@ async def setup_database(check_test_mode):
         await conn.run_sync(Base.metadata.drop_all)
         await conn.run_sync(Base.metadata.create_all)
 
+    with open("tests/mock_hotels.json", encoding="utf-8") as file_hotels:
+        hotels = json.load(file_hotels)
+    with open("tests/mock_rooms.json", encoding="utf-8") as file_rooms:
+        rooms = json.load(file_rooms)
+
+    hotels = [HotelAdd.model_validate(hotel) for hotel in hotels]
+    rooms = [RoomAdd.model_validate(room) for room in rooms]
+
+    async with DBManager(session_factory=async_session_maker_null_pool) as db:
+        await db.hotels.add_bulk(hotels)
+        await db.rooms.add_bulk(rooms)
+        await db.commit()
+
 
 @pytest.fixture(scope="session", autouse=True)
 async def register_user(setup_database):
@@ -35,25 +48,3 @@ async def register_user(setup_database):
             "/auth/register",
             json={"email": "kot@pes.com", "password": "1234"},
         )
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def create_hotels(setup_database):
-    async with DBManager(session_factory=async_session_maker_null_pool) as db:
-        with open("tests/mock_hotels.json", "r") as file:
-            hotels_data = json.load(file)
-        for hotel_data in hotels_data:
-            new_hotel_data = await db.hotels.add(HotelAdd(**hotel_data))
-            await db.commit()
-            print(f"{new_hotel_data=}")
-
-
-@pytest.fixture(scope="session", autouse=True)
-async def create_rooms(setup_database):
-    async with DBManager(session_factory=async_session_maker_null_pool) as db:
-        with open("tests/mock_rooms.json", "r") as file:
-            rooms_data = json.load(file)
-        for room_data in rooms_data:
-            new_room_data = await db.rooms.add(RoomAdd(**room_data))
-            await db.commit()
-            print(f"{new_room_data=}")

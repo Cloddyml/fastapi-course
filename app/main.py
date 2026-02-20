@@ -1,4 +1,5 @@
 import sys
+from contextlib import asynccontextmanager
 from pathlib import Path
 
 import uvicorn
@@ -6,6 +7,7 @@ from fastapi import FastAPI
 
 sys.path.append(str(Path(__file__).parent.parent))
 
+from app import redis_manager
 from app.api.auth import router as router_auth
 from app.api.bookings import router as router_bookings
 from app.api.facilities import router as router_facilities
@@ -14,7 +16,17 @@ from app.api.rooms import router as router_rooms
 
 # print(f"{settings.DB_NAME=}")
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # При старте приложения
+    await redis_manager.connect()
+    yield
+    # При выключении/перезагрузке приложения
+    await redis_manager.close()
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.include_router(router_auth)
 app.include_router(router_hotels)

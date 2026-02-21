@@ -3,7 +3,7 @@ from datetime import date
 from app.schemas.bookings import BookingAdd
 
 
-async def test_booking_crud(db):
+async def test_booking_crud(db, setup_database):
     user_id = (await db.users.get_all())[0].id
     room_id = (await db.rooms.get_all())[0].id
     booking_data = BookingAdd(

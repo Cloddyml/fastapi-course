@@ -1,4 +1,7 @@
-async def test_post_facilities(ac):
+from httpx import AsyncClient
+
+
+async def test_post_facilities(ac: AsyncClient):
     facility_title = "Wi-Fi"
     response = await ac.post("/facilities", json={"title": facility_title})
     assert response.status_code == 200
@@ -8,7 +11,7 @@ async def test_post_facilities(ac):
     assert "data" in res
 
 
-async def test_get_facilities(ac):
+async def test_get_facilities(ac: AsyncClient):
     response = await ac.get(
         "/facilities",
         params={},

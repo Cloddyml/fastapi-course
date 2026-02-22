@@ -30,6 +30,6 @@ async def add_facilities(
     facility = await db.facilities.add(facility_data)
     await db.commit()
 
-    test_task.delay()
+    test_task.delay()  # type: ignore
 
     return {"status": "OK", "data": facility}

@@ -1,4 +1,5 @@
 import pytest
+from httpx import AsyncClient
 
 
 @pytest.mark.parametrize(
@@ -11,7 +12,7 @@ import pytest
         ("abcde@abc", "1234431", 422),
     ],
 )
-async def test_auth_flow(email: str, password: str, status_code: int, ac):
+async def test_auth_flow(email: str, password: str, status_code: int, ac: AsyncClient):
     # /register
     resp_register = await ac.post(
         "/auth/register",

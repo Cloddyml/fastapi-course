@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Self
 
 from sqlalchemy import func, select
 
@@ -7,7 +8,6 @@ from app.models.rooms import RoomsOrm
 from app.repositories.base import BaseRepository
 from app.repositories.mappers.mappers import HotelDataMapper
 from app.repositories.utils import rooms_ids_for_booking
-from app.schemas.hotels import Hotel
 
 
 class HotelsRepository(BaseRepository):
@@ -22,7 +22,7 @@ class HotelsRepository(BaseRepository):
         offset,
         date_from: date,
         date_to: date,
-    ) -> list[Hotel]:
+    ) -> list[Self.mapper]:  # type: ignore
         rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotel_ids_to_get = (
             select(RoomsOrm.hotel_id)

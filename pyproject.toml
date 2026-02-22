@@ -31,6 +31,7 @@ venv = ".venv"
 
 [dependency-groups]
 dev = [
+    "pyright>=1.1.408",
     "pytest>=9.0.2",
     "pytest-asyncio>=1.3.0",
     "pytest-dotenv>=0.5.2",

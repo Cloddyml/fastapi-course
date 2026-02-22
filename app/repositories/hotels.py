@@ -1,5 +1,4 @@
 from datetime import date
-from typing import Self
 
 from sqlalchemy import func, select
 
@@ -22,7 +21,7 @@ class HotelsRepository(BaseRepository):
         offset,
         date_from: date,
         date_to: date,
-    ) -> list[Self.mapper]:  # type: ignore
+    ) -> list[mapper]:  # type: ignore
         rooms_ids_to_get = rooms_ids_for_booking(date_from=date_from, date_to=date_to)
         hotel_ids_to_get = (
             select(RoomsOrm.hotel_id)
@@ -37,4 +36,4 @@ class HotelsRepository(BaseRepository):
         query = query.limit(limit).offset(offset)
         result = await self.session.execute(query)
 
-        return [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]
+        return [self.mapper.map_to_domain_entity(hotel) for hotel in result.scalars().all()]  # type: ignore

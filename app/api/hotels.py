@@ -1,4 +1,5 @@
 from datetime import date
+from typing import Annotated
 
 from fastapi import APIRouter, Body, Query
 from fastapi_cache.decorator import cache
@@ -21,8 +22,22 @@ async def get_hotels(
     db: DBDep,
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Город отеля"),
-    date_from: date = Query(example="2026-02-01"),
-    date_to: date = Query(example="2026-02-10"),
+    date_from: Annotated[
+        date | None,
+        Query(
+            openapi_examples={
+                "Дата 1": {"value": "2026-02-01"},
+            }
+        ),
+    ] = None,
+    date_to: Annotated[
+        date | None,
+        Query(
+            openapi_examples={
+                "Дата 1": {"value": "2026-02-01"},
+            }
+        ),
+    ] = None,
 ):
     check_date_to_after_date_from(date_from=date_from, date_to=date_to)
     per_page = pagination.per_page or 5

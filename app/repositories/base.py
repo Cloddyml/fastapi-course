@@ -54,7 +54,6 @@ class BaseRepository:
             model = result.scalars().one()
             return self.mapper.map_to_domain_entity(model)
         except IntegrityError as ex:
-            print(f"{type(ex.orig.__cause__)=}")  # type: ignore
             if isinstance(ex.orig.__cause__, UniqueViolationError):  # type: ignore
                 raise ObjectAlreadyExsitsException from ex
             else:

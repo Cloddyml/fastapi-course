@@ -1,14 +1,15 @@
 from typing import Any, Sequence, Type
 
+from asyncpg.exceptions import UniqueViolationError
 from fastapi import HTTPException
 from pydantic import BaseModel
 from sqlalchemy import delete as sa_delete
 from sqlalchemy import func, insert, select, update
-from sqlalchemy.exc import NoResultFound
+from sqlalchemy.exc import IntegrityError, NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import Base
-from app.exceptions import ObjectNotFoundException
+from app.exceptions import ObjectAlreadyExsitsException, ObjectNotFoundException
 from app.repositories.mappers.base import DataMapper
 
 
@@ -46,11 +47,18 @@ class BaseRepository:
         return self.mapper.map_to_domain_entity(model)
 
     async def add(self, data: BaseModel) -> BaseModel | Any:
-        add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
-        # print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True})) # Для дебага и получения сырого SQL запроса
-        result = await self.session.execute(add_data_stmt)
-        model = result.scalars().one()
-        return self.mapper.map_to_domain_entity(model)
+        try:
+            add_data_stmt = insert(self.model).values(**data.model_dump()).returning(self.model)
+            # print(add_hotel_stmt.compile(engine, compile_kwargs={"literal_binds": True})) # Для дебага и получения сырого SQL запроса
+            result = await self.session.execute(add_data_stmt)
+            model = result.scalars().one()
+            return self.mapper.map_to_domain_entity(model)
+        except IntegrityError as ex:
+            print(f"{type(ex.orig.__cause__)=}")  # type: ignore
+            if isinstance(ex.orig.__cause__, UniqueViolationError):  # type: ignore
+                raise ObjectAlreadyExsitsException from ex
+            else:
+                raise ex
 
     async def add_bulk(self, data: Sequence[BaseModel]):
         add_data_stmt = insert(self.model).values([item.model_dump() for item in data])

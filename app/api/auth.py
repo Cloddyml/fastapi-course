@@ -1,3 +1,5 @@
+import logging
+
 from fastapi import APIRouter, HTTPException, Response
 
 from app.api.dependencies import DBDep, UserIdDep
@@ -19,6 +21,7 @@ async def register_user(
         await db.users.add(new_user_data)
         await db.commit()
     except ObjectAlreadyExsitsException:
+        logging.exception("Существующий email при регистрации")
         raise HTTPException(status_code=409, detail="Пользователь с такой почтой уже существует")
 
     return {"status": "OK"}

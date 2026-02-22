@@ -1,4 +1,5 @@
 # import asyncio
+import logging
 import sys
 from contextlib import asynccontextmanager
 from pathlib import Path
@@ -6,14 +7,10 @@ from pathlib import Path
 import uvicorn
 from fastapi import FastAPI
 from fastapi_cache import FastAPICache
-
-# from fastapi_cache.backends.inmemory import InMemoryBackend
 from fastapi_cache.backends.redis import RedisBackend
 
+# from fastapi_cache.backends.inmemory import InMemoryBackend
 # from app.api.dependencies import get_db
-
-sys.path.append(str(Path(__file__).parent.parent))
-
 from app import redis_manager
 from app.api.auth import router as router_auth
 from app.api.bookings import router as router_bookings
@@ -35,6 +32,8 @@ from app.api.rooms import router as router_rooms
 #     while True:
 #         await send_emails_bookings_today_checkin()
 #         await asyncio.sleep(5)
+sys.path.append(str(Path(__file__).parent.parent))
+logging.basicConfig(level=logging.DEBUG)
 
 
 @asynccontextmanager
@@ -43,6 +42,7 @@ async def lifespan(app: FastAPI):
     # asyncio.create_task(run_send_email_regularly())
     await redis_manager.connect()
     FastAPICache.init(RedisBackend(redis_manager._redis), prefix="fastapi-cache")
+    logging.info("FastAPI cache initialized")
     yield
     # При выключении/перезагрузке приложения
     await redis_manager.close()

@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Sequence, Type
 
 from asyncpg.exceptions import UniqueViolationError
@@ -54,9 +55,15 @@ class BaseRepository:
             model = result.scalars().one()
             return self.mapper.map_to_domain_entity(model)
         except IntegrityError as ex:
+            logging.error(
+                f"""Не удалось добавить данные в БД; входные данные={data}; тип ошибки:{type(ex.orig.__cause__)=}"""  # type: ignore
+            )
             if isinstance(ex.orig.__cause__, UniqueViolationError):  # type: ignore
                 raise ObjectAlreadyExsitsException from ex
             else:
+                logging.error(
+                    f"""Незнакомая ошибка; входные данные={data}; тип ошибки:{type(ex.orig.__cause__)=}"""
+                )
                 raise ex
 
     async def add_bulk(self, data: Sequence[BaseModel]):

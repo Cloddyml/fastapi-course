@@ -43,9 +43,7 @@ def resize_image(image_path: str):
         # Сохраняем изображение
         img_resized.save(output_path)
 
-    print(
-        f"Изображение сохранено в следующих размерах: {sizes} в папке {output_folder}"
-    )
+    print(f"Изображение сохранено в следующих размерах: {sizes} в папке {output_folder}")
 
 
 async def send_email_to_users_with_today_checkin_helper():

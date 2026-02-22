@@ -12,9 +12,7 @@ class PaginationParams(BaseModel):
     page: Annotated[int, Query(default=1, description="Номер страницы с отелями", ge=1)]
     per_page: Annotated[
         int | None,
-        Query(
-            default=None, description="Количество отелей на одной странице", ge=1, lt=30
-        ),
+        Query(default=None, description="Количество отелей на одной странице", ge=1, lt=30),
     ]
 
 

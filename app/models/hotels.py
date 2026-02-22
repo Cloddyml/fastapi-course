@@ -3,6 +3,7 @@ from sqlalchemy import String
 
 from app.database import Base
 
+
 class HotelsOrm(Base):
     __tablename__ = "hotels"
 

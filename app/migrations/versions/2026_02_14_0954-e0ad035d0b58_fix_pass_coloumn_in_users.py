@@ -19,9 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column(
-        "users", sa.Column("hashed_password", sa.String(length=200), nullable=False)
-    )
+    op.add_column("users", sa.Column("hashed_password", sa.String(length=200), nullable=False))
     op.drop_column("users", "hashed_assword")
 
 

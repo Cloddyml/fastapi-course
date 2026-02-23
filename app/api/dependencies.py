@@ -1,9 +1,14 @@
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, Query, Request
+from fastapi import Depends, Query, Request
 from pydantic import BaseModel
 
 from app.database import async_session_maker
+from app.exceptions import (
+    IncorrectTokenException,
+    IncorrectTokenHTTPException,
+    NoAccessTokenHTTPException,
+)
 from app.services.auth import AuthService
 from app.utils.db_manager import DBManager
 
@@ -22,12 +27,15 @@ PaginationDep = Annotated[PaginationParams, Depends()]
 def get_token(request: Request) -> str:
     access_token = request.cookies.get("access_token", None)
     if not access_token:
-        raise HTTPException(status_code=401, detail="Вы не предоставили токен доступа")
+        raise NoAccessTokenHTTPException
     return access_token
 
 
 def get_current_user_id(access_token: str = Depends(get_token)) -> int:
-    data = AuthService().decode_token(access_token)
+    try:
+        data = AuthService().decode_token(access_token)
+    except IncorrectTokenException:
+        raise IncorrectTokenHTTPException
     return data["user_id"]
 
 

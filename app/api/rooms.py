@@ -18,24 +18,24 @@ router = APIRouter(prefix="/hotels", tags=["Номера"])
 
 @router.get("/{hotel_id}/rooms")
 async def get_rooms(
+    date_from: Annotated[
+        date,
+        Query(
+            ...,
+            description="Start date (YYYY-MM-DD)",
+            openapi_examples={"Дата 1": {"value": "2026-02-01"}},
+        ),
+    ],
+    date_to: Annotated[
+        date,
+        Query(
+            ...,
+            description="End date (YYYY-MM-DD)",
+            openapi_examples={"Дата 1": {"value": "2026-02-01"}},
+        ),
+    ],
     db: DBDep,
     hotel_id: int,
-    date_from: Annotated[
-        date | None,
-        Query(
-            openapi_examples={
-                "Дата 1": {"value": "2026-02-01"},
-            }
-        ),
-    ] = None,
-    date_to: Annotated[
-        date | None,
-        Query(
-            openapi_examples={
-                "Дата 1": {"value": "2026-02-01"},
-            }
-        ),
-    ] = None,
 ):
     check_date_to_after_date_from(date_from=date_from, date_to=date_to)
     return await db.rooms.get_filtered_by_time(

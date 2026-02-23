@@ -8,9 +8,9 @@ from app.api.dependencies import DBDep, PaginationDep
 from app.exceptions import (
     HotelNotFoundHTTPException,
     ObjectNotFoundException,
-    check_date_to_after_date_from,
 )
 from app.schemas.hotels import HotelAdd, HotelPatch
+from app.services.hotels import HotelService
 
 router = APIRouter(prefix="/hotels", tags=["Отели"])
 
@@ -18,36 +18,33 @@ router = APIRouter(prefix="/hotels", tags=["Отели"])
 @router.get("")
 @cache(expire=10)
 async def get_hotels(
+    date_from: Annotated[
+        date,
+        Query(
+            ...,
+            description="Start date (YYYY-MM-DD)",
+            openapi_examples={"Дата 1": {"value": "2026-02-01"}},
+        ),
+    ],
+    date_to: Annotated[
+        date,
+        Query(
+            ...,
+            description="End date (YYYY-MM-DD)",
+            openapi_examples={"Дата 1": {"value": "2026-02-01"}},
+        ),
+    ],
     pagination: PaginationDep,
     db: DBDep,
     title: str | None = Query(default=None, description="Название отеля"),
     location: str | None = Query(default=None, description="Город отеля"),
-    date_from: Annotated[
-        date | None,
-        Query(
-            openapi_examples={
-                "Дата 1": {"value": "2026-02-01"},
-            }
-        ),
-    ] = None,
-    date_to: Annotated[
-        date | None,
-        Query(
-            openapi_examples={
-                "Дата 1": {"value": "2026-02-01"},
-            }
-        ),
-    ] = None,
 ):
-    check_date_to_after_date_from(date_from=date_from, date_to=date_to)
-    per_page = pagination.per_page or 5
-    return await db.hotels.get_filtered_by_time(
-        location=location,
-        title=title,
-        limit=per_page,
-        offset=(per_page * (pagination.page - 1)),
-        date_from=date_from,
-        date_to=date_to,
+    await HotelService(db).get_filtered_by_time(
+        date_from,  # type: ignore
+        date_to,  # type: ignore
+        pagination,
+        title,
+        location,
     )
 
 
@@ -57,21 +54,9 @@ async def get_hotel(
     hotel_id: int,
 ):
     try:
-        return await db.hotels.get_one(
-            id=hotel_id,
-        )
+        return await HotelService(db).get_hotel(hotel_id=hotel_id)
     except ObjectNotFoundException:
         raise HotelNotFoundHTTPException
-
-
-@router.delete("/{hotel_id}")
-async def delete_hotels(
-    db: DBDep,
-    hotel_id: int,
-):
-    await db.hotels.delete(id=hotel_id)
-    await db.commit()
-    return {"status": "OK"}
 
 
 @router.post("")
@@ -90,9 +75,7 @@ async def create_hotels(
         }
     ),
 ):
-    hotel = await db.hotels.add(hotel_data)
-    await db.commit()
-
+    hotel = await HotelService(db).add_hotel(data=hotel_data)
     return {"status": "OK", "data": hotel}
 
 
@@ -102,8 +85,7 @@ async def update_hotels(
     hotel_id: int,
     hotel_data: HotelAdd,
 ):
-    await db.hotels.edit(hotel_data, id=hotel_id)
-    await db.commit()
+    await HotelService(db).update_hotels(data=hotel_data, hotel_id=hotel_id)
     return {"status": "OK"}
 
 
@@ -117,6 +99,14 @@ async def edit_hotels(
     hotel_id: int,
     hotel_data: HotelPatch,
 ):
-    await db.hotels.edit(hotel_data, id=hotel_id, exclude_unset=True)
-    await db.commit()
+    await HotelService(db).edit_hotels(data=hotel_data, hotel_id=hotel_id)
+    return {"status": "OK"}
+
+
+@router.delete("/{hotel_id}")
+async def delete_hotels(
+    db: DBDep,
+    hotel_id: int,
+):
+    await HotelService(db).delete_hotels(hotel_id=hotel_id)
     return {"status": "OK"}
